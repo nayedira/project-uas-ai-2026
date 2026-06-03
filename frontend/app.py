@@ -1,5 +1,3 @@
-'''nena - belom aku sesuaikan yak '''
-
 import streamlit as st
 import time
 
@@ -55,7 +53,6 @@ else:
         
         st.header("📚 Personalisasi Mapel")
         
-        # LOGIKA DAFTAR PELAJARAN BERDASARKAN KELAS
         if st.session_state.kelas_siswa == "Kelas 10":
             daftar_mapel = [
                 "Matematika", "B. Indonesia", "B. Inggris", 
