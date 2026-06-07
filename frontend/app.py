@@ -1,13 +1,16 @@
+from components.bubblechat import render_chat_message
 import streamlit as st
 import time
 
-# --- PENGATURAN HALAMAN ---
 st.set_page_config(page_title="EDUSIST - Mockup", page_icon="🎓", layout="centered")
 
-# --- CUSTOM CSS (MENGADOPSI GAYA PELAJARI.AI / EDTECH MODERN) ---
 st.markdown("""
 <style>
-    /* Styling untuk tombol agar terlihat lebih modern (rounded) */
+    
+    .stApp {
+        background: linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%);
+    }
+            
     .stButton>button {
         border-radius: 12px;
         border: 1px solid #e0e0e0;
@@ -24,13 +27,11 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
     }
     
-    /* Styling header */
     h1 {
         font-family: 'Inter', sans-serif;
         color: #1E293B;
     }
     
-    /* Mengubah warna background sidebar agar lebih soft */
     [data-testid="stSidebar"] {
         background-color: #F8FAFC;
     }
@@ -47,7 +48,7 @@ if "messages" not in st.session_state:
 if "kelas_siswa" not in st.session_state:
     st.session_state.kelas_siswa = None
 
-# --- 2. HALAMAN PEMILIHAN KELAS (ONBOARDING DASHBOARD) ---
+# --- 2. HALAMAN PEMILIHAN KELAS  ---
 if st.session_state.kelas_siswa is None:
     st.write("---")
     st.subheader("👋 Halo! Selamat datang di EDUSIST.")
@@ -102,24 +103,9 @@ else:
         st.caption("- Ketik **'game'** (Tes OOT)")
         st.caption("- Ketik **'rumus'** (Tes Belajar)")
 
-
+    # --- TAMPILKAN RIWAYAT CHAT ---
     for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.write(msg["content"])
-            if "transparency" in msg:
-                with st.expander("🔍 Detail Evaluasi AI"):
-                    label = msg["transparency"]["label"]
-                    if label == "valid_learning":
-                        st.success(f"✅ Label: {label}")
-                    elif label == "cheating_attempt":
-                        st.error(f"🚨 Label: {label}")
-                    elif label == "inappropriate":
-                        st.error(f"🛑 Label: {label}")
-                    elif label == "out_of_context":
-                        st.warning(f"⚠️ Label: {label}")
-                    
-                    st.write(f"**Alasan:** {msg['transparency']['reason']}")
-                    st.write(f"**Tingkat Keyakinan (Confidence):** {msg['transparency']['confidence']}")
+        render_chat_message(msg)
 
     # --- INPUT USER & LOGIKA KLASIFIKASI MOCKUP ---
     if prompt := st.chat_input(f"Tanyakan materi {subject} di sini..."):
