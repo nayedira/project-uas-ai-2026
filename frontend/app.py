@@ -2,141 +2,207 @@ import streamlit as st
 import time
 
 # --- PENGATURAN HALAMAN ---
-st.set_page_config(page_title="EDUSIST - Pameran", page_icon="🎓", layout="centered")
+st.set_page_config(page_title="EDUSIST - Pameran", page_icon="🎓", layout="wide", initial_sidebar_state="expanded")
 
-# --- CUSTOM CSS (TEMA BUKU TULIS GRADASI) ---
+# --- CUSTOM CSS (EDTECH MODERN THEME) ---
 st.markdown("""
 <style>
-    /* Background area utama */
-    [data-testid="stAppViewContainer"] {
-        background-color: #f3f4f6;
-        background-image: 
-            linear-gradient(135deg, rgba(238, 242, 255, 0.95) 0%, rgba(224, 231, 255, 0.85) 100%),
-            repeating-linear-gradient(transparent, transparent 31px, rgba(165, 180, 252, 0.4) 31px, rgba(165, 180, 252, 0.4) 32px);
-        background-attachment: fixed;
+    <style>
+    /* 1. APPLE SYSTEM FONT (SAN FRANCISCO) */
+    html, body, [class*="css"], .stTextInput input, .stSelectbox, .stMarkdown, p, h1, h2, h3 {
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        letter-spacing: -0.015em;
     }
 
-    /* Styling tombol outline */
+    /* 2. BACKGROUND UTAMA ADAPTIF DENGAN POLA TITIK (DOTS) */
+    [data-testid="stAppViewContainer"] {
+        /* Hapus warna hardcode, biarkan transparan agar ikut tema Streamlit */
+        background-color: transparent;
+        /* Gunakan rgba abu-abu netral agar titiknya terlihat di mode terang maupun gelap */
+        background-image: radial-gradient(rgba(128, 128, 128, 0.15) 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+
+    /* 3. STYLING SIDEBAR */
+    [data-testid="stSidebar"] {
+        /* Menggunakan warna sekunder bawaan tema (Otomatis putih di Light, abu gelap di Dark) */
+        background-color: var(--secondary-background-color);
+        border-right: 1px solid rgba(128, 128, 128, 0.1);
+    }
+
+    /* 4. TOMBOL MODERN (Tetap warna gradasi karena cocok di dua mode) */
     .stButton>button {
         border-radius: 12px;
-        border: 2px solid #4F46E5 !important;
-        background-color: rgba(255, 255, 255, 0.5) !important;
-        color: #4F46E5 !important;
-        font-weight: 700;
-        transition: all 0.3s ease;
-        padding: 10px 24px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%) !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 12px 24px;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
     }
     
     .stButton>button:hover {
-        background-color: #4F46E5 !important;
-        color: #ffffff !important;
-        box-shadow: 0 6px 15px rgba(79, 70, 229, 0.3);
-        transform: translateY(-2px);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
     }
     
-    /* Styling radio button untuk list history chat */
-    .stRadio label {
-        background-color: rgba(255, 255, 255, 0.5);
-        padding: 5px 10px;
-        border-radius: 8px;
-        margin-bottom: 5px;
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%) !important;
+        box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3) !important;
+    }
+
+    /* 5. TEKS JUDUL & SUBJUDUL ADAPTIF */
+    .gradient-text {
+        background: linear-gradient(to right, #4F46E5, #EC4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0px;
+        text-align: center;
+    }
+    
+    .subtitle-text {
+        text-align: center;
+        color: var(--text-color); /* Otomatis hitam/putih */
+        opacity: 0.7; /* Efek memudar agar elegan */
+        font-weight: 500;
+        margin-top: -10px;
+        margin-bottom: 30px;
+    }
+
+    /* 6. KOTAK LOGIN GLASSMORPHISM ADAPTIF */
+    .login-box {
+        background: var(--secondary-background-color); /* Adaptif */
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        text-align: center;
+        margin-top: 20px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    /* 7. STYLING CHAT BUBBLE ADAPTIF */
+    .stChatMessage {
+        background-color: var(--secondary-background-color); /* Adaptif */
+        border-radius: 18px;
+        padding: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: 1px solid rgba(128, 128, 128, 0.1);
+        margin-bottom: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 1. SETUP SESSION STATE DENGAN MULTI-CHAT ---
+# --- 1. SETUP SESSION STATE MULTI-CHAT ---
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "user_name" not in st.session_state:
     st.session_state.user_name = ""
 if "kelas_siswa" not in st.session_state:
     st.session_state.kelas_siswa = "Kelas 10"
-
-# Lemari untuk menyimpan banyak sesi chat
 if "chat_sessions" not in st.session_state:
-    st.session_state.chat_sessions = {"Obrolan 1": []}
-# Penanda chat mana yang sedang dibuka
+    st.session_state.chat_sessions = {"Sesi Belajar 1": []}
 if "active_chat" not in st.session_state:
-    st.session_state.active_chat = "Obrolan 1"
+    st.session_state.active_chat = "Sesi Belajar 1"
 
 # --- 2. HALAMAN LOGIN ---
 if not st.session_state.logged_in:
-    st.title("🎓 EDUSIST")
-    st.markdown("*Sistem Edukasi AI dengan Ethical Guardrails*")
-    st.divider()
+    # Menggunakan kolom untuk menengahkan box di layar wide
+    col1, col2, col3 = st.columns([1, 2, 1])
     
-    st.subheader("Selamat datang! 👋")
-    st.write("Silakan isi data diri untuk mencoba prototipe pembelajaran adaptif.")
-    
-    nama_input = st.text_input("Nama Kamu:", placeholder="Ketik nama panggilanmu...")
-    kelas_input = st.selectbox("Tingkat Kelas:", ["Kelas 10", "Kelas 11", "Kelas 12"])
-    
-    if st.button("🚀 Mulai Belajar", use_container_width=True):
-        if nama_input.strip() == "":
-            st.error("Nama tidak boleh kosong ya!")
-        else:
-            st.session_state.user_name = nama_input
-            st.session_state.kelas_siswa = kelas_input
-            st.session_state.logged_in = True
-            st.rerun()
+    with col2:
+        st.markdown("<h1 class='gradient-text'>EDUSIST</h1>", unsafe_allow_html=True)
+        st.markdown("<p class='subtitle-text'>Sistem Edukasi AI Berbasis Etika 🎓</p>", unsafe_allow_html=True)
+        
+        st.markdown("<div class='login-box'>", unsafe_allow_html=True)
+        st.subheader("Mulai Belajar Yuk! 👋")
+        st.write("Isi profil kamu di bawah ini untuk memulai.")
+        st.write("") # Spacer
+        
+        nama_input = st.text_input("Nama Panggilan:", placeholder="Ketik namamu di sini...")
+        kelas_input = st.selectbox("Tingkat Kelas:", ["Kelas 10", "Kelas 11", "Kelas 12"])
+        
+        st.write("") # Spacer
+        if st.button("🚀 Masuk ke Ruang Kelas", use_container_width=True):
+            if nama_input.strip() == "":
+                st.error("Nama belum diisi nih!")
+            else:
+                st.session_state.user_name = nama_input
+                st.session_state.kelas_siswa = kelas_input
+                st.session_state.logged_in = True
+                st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # --- 3. HALAMAN CHAT UTAMA ---
 else:
-    st.title(f"🎓 EDUSIST - {st.session_state.active_chat}")
+    # Header Chat
+    st.markdown("<h2 style='color:#4F46E5; font-weight:800;'>Ruang Belajar Interaktif 🚀</h2>", unsafe_allow_html=True)
+    st.caption(f"Topik saat ini: **{st.session_state.active_chat}**")
     
     # --- SETUP SIDEBAR ---
     with st.sidebar:
-        st.success(f"👋 Halo, **{st.session_state.user_name}**!\n\n🎓 Status: **{st.session_state.kelas_siswa}**")
+        st.markdown("<h1 class='gradient-text' style='font-size:2rem;'>EDUSIST</h1>", unsafe_allow_html=True)
+        st.divider()
+        
+        st.info(f"🧑‍🎓 **{st.session_state.user_name}**\n\n🏫 {st.session_state.kelas_siswa}")
         st.divider()
         
         # --- FITUR CHAT BARU & RIWAYAT ---
-        st.header("💬 Riwayat Chat")
-        
-        # Tombol Bikin Chat Baru
-        if st.button("➕ Chat Baru", use_container_width=True):
-            new_chat_id = f"Obrolan {len(st.session_state.chat_sessions) + 1}"
-            st.session_state.chat_sessions[new_chat_id] = [] # Buat keranjang kosong baru
-            st.session_state.active_chat = new_chat_id       # Pindah ke chat baru itu
+        st.markdown("### 💬 Riwayat Belajar")
+        if st.button("➕ Bikin Sesi Baru", use_container_width=True):
+            new_chat_id = f"Sesi Belajar {len(st.session_state.chat_sessions) + 1}"
+            st.session_state.chat_sessions[new_chat_id] = []
+            st.session_state.active_chat = new_chat_id
             st.rerun()
             
-        # Daftar Radio Button untuk milih chat lama
         chat_list = list(st.session_state.chat_sessions.keys())
-        # Memastikan pilihan radio button sesuai dengan chat yang sedang aktif
         current_index = chat_list.index(st.session_state.active_chat)
+        selected_chat = st.radio("Pilih Sesi:", chat_list, index=current_index, label_visibility="collapsed")
         
-        selected_chat = st.radio("Pilih Sesi:", chat_list, index=current_index)
-        
-        # Jika user mengklik sesi lain di radio button, pindah haluan!
         if selected_chat != st.session_state.active_chat:
             st.session_state.active_chat = selected_chat
             st.rerun()
 
         st.divider()
-        st.header("📚 Mata Pelajaran")
+        st.markdown("### 📚 Mata Pelajaran")
         if st.session_state.kelas_siswa == "Kelas 10":
             daftar_mapel = ["Matematika", "B. Indonesia", "B. Inggris", "IPA", "IPS", "Informatika"]
         else:
             daftar_mapel = ["Matematika", "B. Indonesia", "B. Inggris", "Biologi", "Kimia", "Fisika", "Sosiologi", "Ekonomi", "Informatika", "Geografi", "Sejarah"]
-        subject = st.selectbox("Fokus belajarmu hari ini:", daftar_mapel)
+        subject = st.selectbox("Pilih mapel:", daftar_mapel, label_visibility="collapsed")
         
         st.divider()
-        if st.button("🚪 Akhiri Sesi (Logout)", type="primary", use_container_width=True):
-            # Reset HANYA JIKA pengunjung mau ganti orang
+        if st.button("🚪 Keluar Kelas", type="primary", use_container_width=True):
             st.session_state.logged_in = False
             st.session_state.user_name = ""
-            st.session_state.chat_sessions = {"Obrolan 1": []}
-            st.session_state.active_chat = "Obrolan 1"
+            st.session_state.chat_sessions = {"Sesi Belajar 1": []}
+            st.session_state.active_chat = "Sesi Belajar 1"
             st.rerun()
 
-    # --- TAMPILKAN RIWAYAT CHAT (KHUSUS SESI YANG AKTIF SAJA) ---
+    # --- TAMPILKAN RIWAYAT CHAT ---
     active_messages = st.session_state.chat_sessions[st.session_state.active_chat]
     
+    # Tampilkan sapaan awal jika sesi masih kosong
+    if not active_messages:
+        with st.chat_message("assistant", avatar="🤖"):
+            st.write(f"Halo {st.session_state.user_name}! Aku EDUSIST, asisten belajarmu. Hari ini kita mau bahas materi **{subject}** apa nih?")
+
     for msg in active_messages:
-        with st.chat_message(msg["role"]):
+        # Menambahkan Avatar kustom!
+        avatar_icon = "🧑‍🎓" if msg["role"] == "user" else "🤖"
+        
+        with st.chat_message(msg["role"], avatar=avatar_icon):
             st.write(msg["content"])
             if "transparency" in msg:
-                with st.expander("🔍 Detail Evaluasi AI"):
+                with st.expander("🔍 Detail Evaluasi Guardrails AI"):
                     label = msg["transparency"]["label"]
                     if label == "valid_learning":
                         st.success(f"✅ Label: {label}")
@@ -150,35 +216,34 @@ else:
                     st.write(f"**Keyakinan (Confidence):** {msg['transparency']['confidence']}")
 
     # --- INPUT USER ---
-    if prompt := st.chat_input(f"Tanyakan materi {subject} di sini..."):
+    if prompt := st.chat_input(f"Ketik pertanyaan {subject} di sini..."):
         
-        with st.chat_message("user"):
+        with st.chat_message("user", avatar="🧑‍🎓"):
             st.write(prompt)
         
-        # Simpan pesan user ke keranjang chat yang sedang aktif
         st.session_state.chat_sessions[st.session_state.active_chat].append({"role": "user", "content": prompt})
 
         prompt_lower = prompt.lower()
         
         if "jawaban" in prompt_lower or "contekan" in prompt_lower:
-            response = f"Maaf ya {st.session_state.user_name}, EDUSIST dirancang untuk membimbingmu belajar, bukan memberikan jawaban instan. Yuk, kita pelajari bareng!"
+            response = f"Maaf ya {st.session_state.user_name}, EDUSIST dirancang untuk membimbingmu belajar, bukan memberikan jawaban instan. Yuk, kita pelajari langkah-langkahnya bareng!"
             transparency = {"label": "cheating_attempt", "reason": "Terdeteksi pola permintaan jawaban langsung.", "confidence": "96.5%"}
         elif "bego" in prompt_lower or "bodoh" in prompt_lower or "kasar" in prompt_lower:
-            response = f"Halo {st.session_state.user_name}! Mari kita jaga lingkungan belajar ini tetap positif. Gunakan bahasa yang sopan ya."
+            response = f"Halo {st.session_state.user_name}! Mari kita jaga ruang kelas ini tetap positif. Gunakan bahasa yang sopan ya agar belajarnya makin nyaman."
             transparency = {"label": "inappropriate", "reason": "Terdeteksi penggunaan kata tidak sopan.", "confidence": "92.8%"}
         elif "game" in prompt_lower or "film" in prompt_lower or "makan" in prompt_lower:
-            response = "Wah, pembahasannya melenceng dari topik akademik nih. Yuk kembali fokus ke materi pelajaran!"
+            response = "Wah, seru sih pembahasannya, tapi ini agak melenceng dari topik sekolah nih. Yuk kita kembali fokus ke pelajaran!"
             transparency = {"label": "out_of_context", "reason": "Topik tidak berkorelasi dengan materi sekolah.", "confidence": "89.2%"}
         else:
-            response = f"Bagus sekali pertanyaanmu! Sesuai kurikulum **{st.session_state.kelas_siswa}** untuk **{subject}**, konsep ini dijelaskan sebagai berikut..."
+            response = f"Bagus sekali pertanyaanmu! Berdasarkan kurikulum **{st.session_state.kelas_siswa}** untuk **{subject}**, konsep ini dijelaskan sebagai berikut..."
             transparency = {"label": "valid_learning", "reason": "Pertanyaan aman dan edukatif.", "confidence": "99.1%"}
 
-        with st.chat_message("assistant"):
-            with st.spinner("Menganalisis pertanyaan..."):
-                time.sleep(1.2) 
+        with st.chat_message("assistant", avatar="🤖"):
+            with st.spinner("Sedang berpikir..."):
+                time.sleep(1.0) 
                 st.write(response)
                 
-                with st.expander("🔍 Detail Evaluasi AI"):
+                with st.expander("🔍 Detail Evaluasi Guardrails AI"):
                     if transparency["label"] == "valid_learning":
                         st.success(f"✅ Label: {transparency['label']}")
                     elif transparency["label"] == "cheating_attempt":
@@ -190,7 +255,6 @@ else:
                     st.write(f"**Alasan:** {transparency['reason']}")
                     st.write(f"**Keyakinan (Confidence):** {transparency['confidence']}")
         
-        # Simpan balasan AI ke keranjang chat yang sedang aktif
         st.session_state.chat_sessions[st.session_state.active_chat].append({
             "role": "assistant",
             "content": response,
