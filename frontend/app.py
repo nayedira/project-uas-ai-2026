@@ -1,10 +1,11 @@
 import streamlit as st
 import time
+import re
 
-# --- PENGATURAN HALAMAN ---
-st.set_page_config(page_title="EDUSIST - Pameran", page_icon="🎓", layout="wide", initial_sidebar_state="expanded")
+# --- PAGE CONFIGURATION ---
+st.set_page_config(page_title="EDUSIST - Exhibition", layout="wide", initial_sidebar_state="expanded")
 
-# --- CUSTOM CSS (APPLE THEME - ADAPTIF LIGHT & DARK MODE) ---
+# --- CUSTOM CSS (APPLE THEME - CUSTOM PALETTE) ---
 st.markdown("""
 <style>
     html, body, [class*="css"], .stTextInput input, .stSelectbox, .stMarkdown, p, h1, h2, h3 {
@@ -12,34 +13,34 @@ st.markdown("""
         letter-spacing: -0.015em;
     }
     [data-testid="stAppViewContainer"] {
-        background-color: transparent;
-        background-image: radial-gradient(rgba(128, 128, 128, 0.15) 1px, transparent 1px);
+        background-color: #f8fafc; /* Very light gray to make the white boxes pop */
+        background-image: radial-gradient(rgba(56, 77, 149, 0.05) 1px, transparent 1px);
         background-size: 20px 20px;
     }
     [data-testid="stSidebar"] {
-        background-color: var(--secondary-background-color);
-        border-right: 1px solid rgba(128, 128, 128, 0.1);
+        background-color: #ffffff;
+        border-right: 1px solid rgba(56, 77, 149, 0.1);
     }
     .stButton>button {
         border-radius: 12px;
-        background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%) !important;
-        color: white !important;
+        background: linear-gradient(135deg, #384d95 0%, #e63e88 100%) !important;
+        color: #ffffff !important;
         border: none !important;
         font-weight: 600;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         padding: 12px 24px;
-        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        box-shadow: 0 4px 15px rgba(56, 77, 149, 0.3);
     }
     .stButton>button:hover {
         transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        box-shadow: 0 8px 25px rgba(56, 77, 149, 0.4);
     }
     button[kind="primary"] {
-        background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%) !important;
-        box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3) !important;
+        background: #e63e88 !important;
+        box-shadow: 0 4px 15px rgba(230, 62, 136, 0.3) !important;
     }
     .gradient-text {
-        background: linear-gradient(to right, #4F46E5, #EC4899);
+        background: linear-gradient(to right, #384d95, #e63e88);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-size: 3rem;
@@ -49,20 +50,18 @@ st.markdown("""
     }
     .subtitle-text {
         text-align: center;
-        color: var(--text-color);
-        opacity: 0.7;
+        color: #384d95;
+        opacity: 0.8;
         font-weight: 500;
         margin-top: -10px;
         margin-bottom: 30px;
     }
     .login-box {
-        background: var(--secondary-background-color);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        background: #ffffff;
         padding: 40px;
         border-radius: 24px;
-        border: 1px solid rgba(128, 128, 128, 0.2);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border: 1px solid rgba(56, 77, 149, 0.1);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.05);
         text-align: center;
         margin-top: 20px;
         max-width: 500px;
@@ -70,21 +69,41 @@ st.markdown("""
         margin-right: auto;
     }
     .stChatMessage {
-        background-color: var(--secondary-background-color);
+        background-color: #ffffff;
         border-radius: 18px;
         padding: 15px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        border: 1px solid rgba(128, 128, 128, 0.1);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        border: 1px solid rgba(56, 77, 149, 0.1);
         margin-bottom: 15px;
     }
-    
-    /* Styling khusus untuk memastikan pop-up modal terlihat elegan */
     [data-testid="stDialog"] {
         border-radius: 24px;
         padding: 20px;
+        background-color: #ffffff;
+    }
+    .stChatInputContainer textarea::placeholder {
+        color: rgba(56, 77, 149, 0.5) !important;
     }
 </style>
 """, unsafe_allow_html=True)
+
+# --- AUTO DETECT SUBJECT FUNCTION ---
+def auto_detect_mapel(text):
+    text = text.lower()
+    if any(w in text for w in ["hitung", "rumus", "angka", "matematika", "persamaan", "kuadrat", "akar", "tambah", "kurang", "kali", "bagi", "x", "y", "peluang", "trigonometri", "math", "calculate", "formula", "equation"]): return "Mathematics"
+    if any(w in text for w in ["sel", "hewan", "tumbuhan", "biologi", "fotosintesis", "dna", "bakteri", "virus", "jaringan", "organ", "cell", "animal", "plant", "biology"]): return "Biology"
+    if any(w in text for w in ["gaya", "cepat", "fisika", "gravitasi", "newton", "energi", "joule", "listrik", "magnet", "kecepatan", "physics", "force", "speed", "energy"]): return "Physics"
+    if any(w in text for w in ["atom", "reaksi", "kimia", "unsur", "senyawa", "asam", "basa", "molekul", "ikatan", "larutan", "chemistry", "reaction", "element"]): return "Chemistry"
+    if any(w in text for w in ["sejarah", "tahun", "perang", "pahlawan", "kerajaan", "kemerdekaan", "masehi", "pki", "proklamasi", "history", "war", "hero"]): return "History"
+    if any(w in text for w in ["geografi", "bumi", "peta", "iklim", "gunung", "gempa", "tsunami", "cuaca", "atmosfer", "geography", "earth", "map", "climate"]): return "Geography"
+    if any(w in text for w in ["ekonomi", "uang", "pasar", "harga", "saham", "inflasi", "permintaan", "penawaran", "koperasi", "economy", "money", "market", "price"]): return "Economics"
+    if any(w in text for w in ["sosiologi", "masyarakat", "sosial", "konflik", "budaya", "interaksi", "norma", "nilai", "sociology", "society", "culture"]): return "Sociology"
+    if any(w in text for w in ["puisi", "majas", "cerpen", "indonesia", "paragraf", "kalimat", "pantun", "novel", "poem", "sentence", "indonesian"]): return "Indonesian"
+    if any(w in text for w in ["english", "grammar", "tense", "verb", "inggris", "noun", "adjective", "pronoun"]): return "English"
+    if any(w in text for w in ["coding", "python", "algoritma", "informatika", "komputer", "program", "software", "hardware", "computer science"]): return "Computer Science"
+    if any(w in text for w in ["ipa", "science"]): return "Science"
+    if any(w in text for w in ["ips", "social studies"]): return "Social Studies"
+    return "General"
 
 # --- 1. SETUP SESSION STATE ---
 if "logged_in" not in st.session_state:
@@ -92,169 +111,206 @@ if "logged_in" not in st.session_state:
 if "user_name" not in st.session_state:
     st.session_state.user_name = ""
 if "kelas_siswa" not in st.session_state:
-    st.session_state.kelas_siswa = "Kelas 10"
-if "selected_subject" not in st.session_state:
-    st.session_state.selected_subject = "Matematika"
+    st.session_state.kelas_siswa = "Grade 10"
 if "chat_sessions" not in st.session_state:
-    st.session_state.chat_sessions = {"Sesi Belajar 1": []}
+    st.session_state.chat_sessions = {"Session 1": {"subject": None, "messages": []}}
 if "active_chat" not in st.session_state:
-    st.session_state.active_chat = "Sesi Belajar 1"
-# Indikator apakah pengguna butuh dimunculkan pop-up
+    st.session_state.active_chat = "Session 1"
 if "show_popup" not in st.session_state:
     st.session_state.show_popup = False
 
-# --- FUNGSI POP-UP MODAL BUKA KELAS ---
-@st.dialog("✨ Persiapan Kelas")
+# --- POP-UP MODAL FUNCTION ---
+@st.dialog("Welcome to EDUSIST")
 def onboarding_popup():
-    st.markdown("<div style='text-align: center;'><h1 style='font-size: 4rem; margin-bottom: 0;'>🤖</h1></div>", unsafe_allow_html=True)
-    st.write(f"Halo **{st.session_state.user_name}**! Aku EDUSIST.")
-    st.write("Hari ini kita mau bedah materi apa nih?")
-    
-    if st.session_state.kelas_siswa == "Kelas 10":
-        daftar_mapel = ["Matematika", "B. Indonesia", "B. Inggris", "IPA", "IPS", "Informatika"]
-    else:
-        daftar_mapel = ["Matematika", "B. Indonesia", "B. Inggris", "Biologi", "Kimia", "Fisika", "Sosiologi", "Ekonomi", "Informatika", "Geografi", "Sejarah"]
-        
-    mapel_pilihan = st.selectbox("Pilih mapel:", daftar_mapel, label_visibility="collapsed")
-    
+    st.write(f"Hello **{st.session_state.user_name}**!")
+    st.write("Just type your question below. I will **automatically detect** the subject.")
     st.write("")
-    if st.button("🚀 Mulai Masuk Kelas", use_container_width=True):
-        st.session_state.selected_subject = mapel_pilihan
-        st.session_state.show_popup = False # Matikan pop-up setelah diklik
+    if st.button("Start Chatting", use_container_width=True):
+        st.session_state.show_popup = False 
         st.rerun()
 
-# --- 2. HALAMAN LOGIN ---
+# --- 2. LOGIN PAGE ---
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("<h1 class='gradient-text'>EDUSIST</h1>", unsafe_allow_html=True)
-        st.markdown("<p class='subtitle-text'>Sistem Edukasi AI Berbasis Etika 🎓</p>", unsafe_allow_html=True)
+        st.markdown("<p class='subtitle-text'>AI-Powered Ethical Education System</p>", unsafe_allow_html=True)
         
         st.markdown("<div class='login-box'>", unsafe_allow_html=True)
-        st.subheader("Mulai Belajar Yuk! 👋")
-        st.write("Isi profil kamu di bawah ini untuk memulai.")
+        st.subheader("Let's Start Learning")
+        st.write("Fill out your profile below to get started.")
         st.write("") 
         
-        nama_input = st.text_input("Nama Panggilan:", placeholder="Ketik namamu di sini...")
-        kelas_input = st.selectbox("Tingkat Kelas:", ["Kelas 10", "Kelas 11", "Kelas 12"])
+        nama_input = st.text_input("Nickname:", placeholder="Type your name here...")
+        kelas_input = st.selectbox("Grade Level:", ["Grade 10", "Grade 11", "Grade 12"])
         
         st.write("") 
-        if st.button("Lanjut ➡️", use_container_width=True):
+        if st.button("Next", use_container_width=True):
             if nama_input.strip() == "":
-                st.error("Nama belum diisi nih!")
+                st.error("Name cannot be empty.")
             else:
                 st.session_state.user_name = nama_input
                 st.session_state.kelas_siswa = kelas_input
                 st.session_state.logged_in = True
-                # Nyalakan trigger pop-up saat berhasil login!
                 st.session_state.show_popup = True 
                 st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 3. RUANG CHAT UTAMA ---
+# --- 3. MAIN CHAT ROOM ---
 else:
-    # Jika trigger pop-up menyala, panggil fungsinya (layar belakang akan otomatis meredup!)
     if st.session_state.show_popup:
         onboarding_popup()
 
-    st.markdown("<h2 style='color:#4F46E5; font-weight:800;'>Ruang Belajar Interaktif 🚀</h2>", unsafe_allow_html=True)
-    st.caption(f"Topik saat ini: **{st.session_state.active_chat}**")
-    
+    # SIDEBAR SETUP
     with st.sidebar:
         st.markdown("<h1 class='gradient-text' style='font-size:2rem;'>EDUSIST</h1>", unsafe_allow_html=True)
         st.divider()
-        st.info(f"🧑‍🎓 **{st.session_state.user_name}**\n\n🏫 {st.session_state.kelas_siswa}\n\n📚 **{st.session_state.selected_subject}**")
+        st.info(f"**{st.session_state.user_name}**\n\n{st.session_state.kelas_siswa}")
         st.divider()
         
-        st.markdown("### 💬 Riwayat Belajar")
-        # Jika bikin sesi baru, pop-up akan muncul lagi untuk memilih mapel baru
-        if st.button("➕ Bikin Sesi Baru", use_container_width=True):
-            new_chat_id = f"Sesi Belajar {len(st.session_state.chat_sessions) + 1}"
-            st.session_state.chat_sessions[new_chat_id] = []
+        mapel_container = st.empty()
+        
+        st.divider()
+        st.markdown("### Learning History")
+        if st.button("Create New Session", use_container_width=True):
+            new_chat_id = f"Session {len(st.session_state.chat_sessions) + 1}"
+            st.session_state.chat_sessions[new_chat_id] = {"subject": None, "messages": []}
             st.session_state.active_chat = new_chat_id
-            st.session_state.show_popup = True 
             st.rerun()
             
         chat_list = list(st.session_state.chat_sessions.keys())
         current_index = chat_list.index(st.session_state.active_chat)
-        selected_chat = st.radio("Pilih Sesi:", chat_list, index=current_index, label_visibility="collapsed")
+        
+        # DROPDOWN UNTUK HISTORY
+        selected_chat = st.selectbox("Select Session:", chat_list, index=current_index, label_visibility="collapsed")
         
         if selected_chat != st.session_state.active_chat:
             st.session_state.active_chat = selected_chat
             st.rerun()
 
         st.divider()
-        if st.button("🚪 Keluar Kelas", type="primary", use_container_width=True):
+        if st.button("Leave Class", type="primary", use_container_width=True):
             st.session_state.logged_in = False
             st.session_state.user_name = ""
-            st.session_state.chat_sessions = {"Sesi Belajar 1": []}
-            st.session_state.active_chat = "Sesi Belajar 1"
+            st.session_state.chat_sessions = {"Session 1": {"subject": None, "messages": []}}
+            st.session_state.active_chat = "Session 1"
             st.session_state.show_popup = False
             st.rerun()
 
-    active_messages = st.session_state.chat_sessions[st.session_state.active_chat]
+    active_chat_data = st.session_state.chat_sessions[st.session_state.active_chat]
+    curr_subj = active_chat_data["subject"]
+    active_messages = active_chat_data["messages"]
     
-    # Sapaan kecil saat chat masih kosong
+    # MAIN HEADER
+    st.markdown("<h2 style='color:#384d95; font-weight:800;'>Interactive Learning Room</h2>", unsafe_allow_html=True)
+    if curr_subj is None or curr_subj == "General":
+        st.caption(f"Session: **{st.session_state.active_chat}** | Subject: *Waiting for auto-detection...*")
+    else:
+        st.caption(f"Session: **{st.session_state.active_chat}** | Subject: **{curr_subj}**")
+
+    # DISPLAY MESSAGES
     if not active_messages and not st.session_state.show_popup:
-        with st.chat_message("assistant", avatar="🤖"):
-            st.write(f"Ruang diskusi untuk materi **{st.session_state.selected_subject}** sudah siap. Mau nanya apa nih?")
+        with st.chat_message("assistant"):
+            st.write("Please type your first question below. I will detect the subject automatically.")
 
     for msg in active_messages:
-        avatar_icon = "🧑‍🎓" if msg["role"] == "user" else "🤖"
-        with st.chat_message(msg["role"], avatar=avatar_icon):
+        with st.chat_message(msg["role"]):
             st.write(msg["content"])
             if "transparency" in msg:
-                with st.expander("🔍 Detail Evaluasi Guardrails AI"):
+                with st.expander("AI Guardrails Evaluation Detail"):
                     label = msg["transparency"]["label"]
                     if label == "valid_learning":
-                        st.success(f"✅ Label: {label}")
+                        st.success(f"Label: {label}")
                     elif label == "cheating_attempt":
-                        st.error(f"🚨 Label: {label}")
+                        st.error(f"Label: {label}")
                     elif label == "inappropriate":
-                        st.error(f"🛑 Label: {label}")
+                        st.error(f"Label: {label}")
                     elif label == "out_of_context":
-                        st.warning(f"⚠️ Label: {label}")
-                    st.write(f"**Alasan:** {msg['transparency']['reason']}")
-                    st.write(f"**Keyakinan (Confidence):** {msg['transparency']['confidence']}")
+                        st.warning(f"Label: {label}")
+                    st.write(f"**Reason:** {msg['transparency']['reason']}")
+                    st.write(f"**Confidence Score:** {msg['transparency']['confidence']}")
 
-    if prompt := st.chat_input(f"Ketik pertanyaan {st.session_state.selected_subject} di sini..."):
-        with st.chat_message("user", avatar="🧑‍🎓"):
+    # DYNAMIC CHAT PLACEHOLDER
+    chat_placeholder = "Type your first question here..." if curr_subj is None or curr_subj == "General" else f"Ask about {curr_subj} here..."
+
+    # USER INPUT & GUARDRAILS LOGIC
+    if prompt := st.chat_input(chat_placeholder):
+        with st.chat_message("user"):
             st.write(prompt)
         
-        st.session_state.chat_sessions[st.session_state.active_chat].append({"role": "user", "content": prompt})
+        st.session_state.chat_sessions[st.session_state.active_chat]["messages"].append({"role": "user", "content": prompt})
         prompt_lower = prompt.lower()
         
-        if "jawaban" in prompt_lower or "contekan" in prompt_lower:
-            response = f"Maaf ya {st.session_state.user_name}, EDUSIST dirancang untuk membimbingmu belajar, bukan memberikan jawaban instan. Yuk, kita pelajari langkah-langkahnya bareng!"
-            transparency = {"label": "cheating_attempt", "reason": "Terdeteksi pola permintaan jawaban langsung.", "confidence": "96.5%"}
-        elif "bego" in prompt_lower or "bodoh" in prompt_lower or "kasar" in prompt_lower:
-            response = f"Halo {st.session_state.user_name}! Mari kita jaga ruang kelas ini tetap positif. Gunakan bahasa yang sopan ya agar belajarnya makin nyaman."
-            transparency = {"label": "inappropriate", "reason": "Terdeteksi penggunaan kata tidak sopan.", "confidence": "92.8%"}
-        elif "game" in prompt_lower or "film" in prompt_lower or "makan" in prompt_lower:
-            response = "Wah, seru sih pembahasannya, tapi ini agak melenceng dari topik sekolah nih. Yuk kita kembali fokus ke pelajaran!"
-            transparency = {"label": "out_of_context", "reason": "Topik tidak berkorelasi dengan materi sekolah.", "confidence": "89.2%"}
+        # AUTO DETECT IF SUBJECT IS EMPTY
+        if st.session_state.chat_sessions[st.session_state.active_chat]["subject"] is None or st.session_state.chat_sessions[st.session_state.active_chat]["subject"] == "General":
+            detected_mapel = auto_detect_mapel(prompt_lower)
+            st.session_state.chat_sessions[st.session_state.active_chat]["subject"] = detected_mapel
+            curr_subj = detected_mapel
+            st.toast(f"Subject detected: {detected_mapel}")
+        
+        # 1. GIBBERISH DETECTION
+        if len(prompt_lower.strip()) < 3 or re.search(r'[^aiueo\s0-9]{5,}', prompt_lower):
+            response = "Hmm, your typing seems unclear or contains typos. Let's try asking your question with a proper sentence."
+            transparency = {"label": "out_of_context", "reason": "Detected meaningless text (gibberish) or invalid input.", "confidence": "98.1%"}
+            
+        # 2. CHEATING DETECTION
+        elif any(w in prompt_lower for w in ["jawaban", "contekan", "answer", "cheat", "key", "kunci"]):
+            response = f"Sorry {st.session_state.user_name}, EDUSIST is designed to guide your learning, not to give instant answers. Let's learn the step-by-step process together."
+            transparency = {"label": "cheating_attempt", "reason": "Detected a pattern requesting direct answers.", "confidence": "96.5%"}
+            
+        # 3. TOXIC DETECTION
+        elif any(w in prompt_lower for w in ["bego", "bodoh", "kasar", "goblok", "tolol", "anjing", "anjay", "stupid", "idiot", "fuck", "shit", "bitch", "asshole"]):
+            response = f"Hello {st.session_state.user_name}. Let's keep this classroom positive. Please use polite language so we can learn comfortably."
+            transparency = {"label": "inappropriate", "reason": "Detected inappropriate language.", "confidence": "92.8%"}
+            
+        # 4. OOT DETECTION
+        elif any(w in prompt_lower for w in ["game", "film", "makan", "movie", "food", "play"]):
+            response = "That sounds fun, but it is a bit off-topic from school. Let's focus back on the lesson."
+            transparency = {"label": "out_of_context", "reason": "Topic is not correlated with school subjects.", "confidence": "89.2%"}
+            
+        # 5. VALID LEARNING
         else:
-            response = f"Bagus sekali pertanyaanmu! Berdasarkan kurikulum **{st.session_state.kelas_siswa}** untuk **{st.session_state.selected_subject}**, konsep ini dijelaskan sebagai berikut..."
-            transparency = {"label": "valid_learning", "reason": "Pertanyaan aman dan edukatif.", "confidence": "99.1%"}
+            response = f"Great question. Based on the **{st.session_state.kelas_siswa}** curriculum for **{curr_subj}**, this concept is explained as follows..."
+            transparency = {"label": "valid_learning", "reason": "Safe and educational question.", "confidence": "99.1%"}
 
-        with st.chat_message("assistant", avatar="🤖"):
-            with st.spinner("Sedang berpikir..."):
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
                 time.sleep(1.0) 
                 st.write(response)
-                with st.expander("🔍 Detail Evaluasi Guardrails AI"):
+                with st.expander("AI Guardrails Evaluation Detail"):
                     if transparency["label"] == "valid_learning":
-                        st.success(f"✅ Label: {transparency['label']}")
+                        st.success(f"Label: {transparency['label']}")
                     elif transparency["label"] == "cheating_attempt":
-                        st.error(f"🚨 Label: {transparency['label']}")
+                        st.error(f"Label: {transparency['label']}")
                     elif transparency["label"] == "inappropriate":
-                        st.error(f"🛑 Label: {transparency['label']}")
+                        st.error(f"Label: {transparency['label']}")
                     elif transparency["label"] == "out_of_context":
-                        st.warning(f"⚠️ Label: {transparency['label']}")
-                    st.write(f"**Alasan:** {transparency['reason']}")
-                    st.write(f"**Keyakinan (Confidence):** {transparency['confidence']}")
+                        st.warning(f"Label: {transparency['label']}")
+                    st.write(f"**Reason:** {transparency['reason']}")
+                    st.write(f"**Confidence Score:** {transparency['confidence']}")
         
-        st.session_state.chat_sessions[st.session_state.active_chat].append({
+        st.session_state.chat_sessions[st.session_state.active_chat]["messages"].append({
             "role": "assistant",
             "content": response,
             "transparency": transparency
         })
+        st.rerun()
+
+    # UPDATE MAPEL SIDEBAR
+    with mapel_container.container():
+        st.markdown("### Subjects")
+        if curr_subj is None or curr_subj == "General":
+            st.info("The subject will be automatically detected after your first question.")
+        else:
+            if st.session_state.kelas_siswa == "Grade 10":
+                daftar_mapel = ["General", "Mathematics", "Indonesian", "English", "Science", "Social Studies", "Computer Science"]
+            else:
+                daftar_mapel = ["General", "Mathematics", "Indonesian", "English", "Biology", "Chemistry", "Physics", "Sociology", "Economics", "Computer Science", "Geography", "History"]
+            
+            if curr_subj not in daftar_mapel:
+                daftar_mapel.append(curr_subj)
+                
+            new_subj = st.selectbox("Session focus subject:", daftar_mapel, index=daftar_mapel.index(curr_subj))
+            if new_subj != curr_subj:
+                st.session_state.chat_sessions[st.session_state.active_chat]["subject"] = new_subj
+                st.rerun()
