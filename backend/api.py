@@ -1,17 +1,26 @@
+import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 import google.generativeai as genai
+from dotenv import load_dotenv # <-- Tambahkan ini
+
+# Muat variabel rahasia dari file .env
+load_dotenv()
 
 app = FastAPI(title="EDUSIST Gemini Backend API")
 
 # --- 1. KONFIGURASI GEMINI API ---
-# PENTING: Ganti tulisan di bawah dengan API Key asli dari Google AI Studio milikmu
-GEMINI_API_KEY = "" 
+# Ambil API Key dari environment (sistem operasi)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Validasi keamanan: Pastikan kunci ditemukan
+if not GEMINI_API_KEY:
+    raise ValueError("API Key tidak ditemukan! Pastikan file .env sudah diisi.")
 
 # Daftarkan API Key ke library Google
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Pilih model Gemini (gemini-1.5-flash adalah yang paling cepat dan cerdas untuk chatbot)
+# Pilih model Gemini 
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 # --- 2. FORMAT DATA DARI FRONTEND ---

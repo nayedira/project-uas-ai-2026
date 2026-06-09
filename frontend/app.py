@@ -1,12 +1,12 @@
 import streamlit as st
 import time
 import re
-import requests # <--- INI KUNCI UNTUK NYAMBUNG KE BACKEND
+import requests 
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="EDUSIST - Exhibition", layout="wide", initial_sidebar_state="expanded")
 
-# --- CUSTOM CSS (APPLE THEME - CUSTOM PALETTE & ADAPTIVE) ---
+# --- CUSTOM CSS ---
 st.markdown("""
 <style>
     html, body, [class*="css"], .stTextInput input, .stSelectbox, .stMarkdown, p, h1, h2, h3 {
@@ -239,7 +239,6 @@ else:
                     st.write(f"**Reason:** {msg['transparency']['reason']}")
                     st.write(f"**Confidence Score:** {msg['transparency']['confidence']}")
 
-    # DYNAMIC CHAT PLACEHOLDER
     chat_placeholder = "Type your first question here..." if curr_subj is None or curr_subj == "Auto-Detect" else f"Ask about {curr_subj} here..."
 
     # USER INPUT & GUARDRAILS LOGIC
@@ -292,7 +291,7 @@ else:
                 }
                 
                 # Nunggu balasan dari otak AI (Timeout 10 detik)
-                api_response = requests.post(api_url, json=payload, timeout=10) 
+                api_response = requests.post(api_url, json=payload, timeout=60) 
                 
                 if api_response.status_code == 200:
                     hasil = api_response.json()
