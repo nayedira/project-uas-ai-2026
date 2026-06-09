@@ -1,11 +1,12 @@
 import streamlit as st
 import time
 import re
+import requests # <--- INI KUNCI UNTUK NYAMBUNG KE BACKEND
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="EDUSIST - Exhibition", layout="wide", initial_sidebar_state="expanded")
 
-# --- CUSTOM CSS (APPLE THEME - CUSTOM PALETTE) ---
+# --- CUSTOM CSS (APPLE THEME - CUSTOM PALETTE & ADAPTIVE) ---
 st.markdown("""
 <style>
     html, body, [class*="css"], .stTextInput input, .stSelectbox, .stMarkdown, p, h1, h2, h3 {
@@ -13,12 +14,12 @@ st.markdown("""
         letter-spacing: -0.015em;
     }
     [data-testid="stAppViewContainer"] {
-        background-color: #f8fafc; /* Very light gray to make the white boxes pop */
-        background-image: radial-gradient(rgba(56, 77, 149, 0.05) 1px, transparent 1px);
+        background-color: transparent;
+        background-image: radial-gradient(rgba(56, 77, 149, 0.15) 1px, transparent 1px);
         background-size: 20px 20px;
     }
     [data-testid="stSidebar"] {
-        background-color: #ffffff;
+        background-color: var(--secondary-background-color);
         border-right: 1px solid rgba(56, 77, 149, 0.1);
     }
     .stButton>button {
@@ -50,17 +51,17 @@ st.markdown("""
     }
     .subtitle-text {
         text-align: center;
-        color: #384d95;
+        color: var(--text-color);
         opacity: 0.8;
         font-weight: 500;
         margin-top: -10px;
         margin-bottom: 30px;
     }
     .login-box {
-        background: #ffffff;
+        background: var(--secondary-background-color);
         padding: 40px;
         border-radius: 24px;
-        border: 1px solid rgba(56, 77, 149, 0.1);
+        border: 1px solid rgba(56, 77, 149, 0.2);
         box-shadow: 0 20px 40px rgba(0,0,0,0.05);
         text-align: center;
         margin-top: 20px;
@@ -69,7 +70,7 @@ st.markdown("""
         margin-right: auto;
     }
     .stChatMessage {
-        background-color: #ffffff;
+        background-color: var(--secondary-background-color);
         border-radius: 18px;
         padding: 15px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
@@ -79,10 +80,10 @@ st.markdown("""
     [data-testid="stDialog"] {
         border-radius: 24px;
         padding: 20px;
-        background-color: #ffffff;
+        background-color: var(--secondary-background-color);
     }
     .stChatInputContainer textarea::placeholder {
-        color: rgba(56, 77, 149, 0.5) !important;
+        color: rgba(128, 128, 128, 0.8) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -123,7 +124,7 @@ if "show_popup" not in st.session_state:
 @st.dialog("Welcome to EDUSIST")
 def onboarding_popup():
     st.write(f"Hello **{st.session_state.user_name}**!")
-    st.write("Just type your question below. I will **automatically detect** the subject.")
+    st.write("Type your question below, and I will **automatically detect** the subject. You can also select it manually in the sidebar.")
     st.write("")
     if st.button("Start Chatting", use_container_width=True):
         st.session_state.show_popup = False 
@@ -165,7 +166,13 @@ else:
     with st.sidebar:
         st.markdown("<h1 class='gradient-text' style='font-size:2rem;'>EDUSIST</h1>", unsafe_allow_html=True)
         st.divider()
-        st.info(f"**{st.session_state.user_name}**\n\n{st.session_state.kelas_siswa}")
+        
+        st.markdown(f"🧑‍🎓 **{st.session_state.user_name}**")
+        new_grade = st.selectbox("Grade Level:", ["Grade 10", "Grade 11", "Grade 12"], index=["Grade 10", "Grade 11", "Grade 12"].index(st.session_state.kelas_siswa), label_visibility="collapsed")
+        if new_grade != st.session_state.kelas_siswa:
+            st.session_state.kelas_siswa = new_grade
+            st.rerun()
+            
         st.divider()
         
         mapel_container = st.empty()
@@ -181,7 +188,6 @@ else:
         chat_list = list(st.session_state.chat_sessions.keys())
         current_index = chat_list.index(st.session_state.active_chat)
         
-        # DROPDOWN UNTUK HISTORY
         selected_chat = st.selectbox("Select Session:", chat_list, index=current_index, label_visibility="collapsed")
         
         if selected_chat != st.session_state.active_chat:
@@ -203,15 +209,18 @@ else:
     
     # MAIN HEADER
     st.markdown("<h2 style='color:#384d95; font-weight:800;'>Interactive Learning Room</h2>", unsafe_allow_html=True)
-    if curr_subj is None or curr_subj == "General":
-        st.caption(f"Session: **{st.session_state.active_chat}** | Subject: *Waiting for auto-detection...*")
+    if curr_subj is None or curr_subj == "Auto-Detect":
+        st.caption(f"Session: **{st.session_state.active_chat}** | Subject: *Auto-Detect Mode...*")
     else:
         st.caption(f"Session: **{st.session_state.active_chat}** | Subject: **{curr_subj}**")
 
     # DISPLAY MESSAGES
     if not active_messages and not st.session_state.show_popup:
         with st.chat_message("assistant"):
-            st.write("Please type your first question below. I will detect the subject automatically.")
+            if curr_subj is None or curr_subj == "Auto-Detect":
+                st.write("Please type your first question below. I will detect the subject automatically, or you can select it manually in the sidebar.")
+            else:
+                st.write(f"Class is ready! What would you like to learn about {curr_subj}?")
 
     for msg in active_messages:
         with st.chat_message(msg["role"]):
@@ -231,7 +240,7 @@ else:
                     st.write(f"**Confidence Score:** {msg['transparency']['confidence']}")
 
     # DYNAMIC CHAT PLACEHOLDER
-    chat_placeholder = "Type your first question here..." if curr_subj is None or curr_subj == "General" else f"Ask about {curr_subj} here..."
+    chat_placeholder = "Type your first question here..." if curr_subj is None or curr_subj == "Auto-Detect" else f"Ask about {curr_subj} here..."
 
     # USER INPUT & GUARDRAILS LOGIC
     if prompt := st.chat_input(chat_placeholder):
@@ -241,8 +250,9 @@ else:
         st.session_state.chat_sessions[st.session_state.active_chat]["messages"].append({"role": "user", "content": prompt})
         prompt_lower = prompt.lower()
         
-        # AUTO DETECT IF SUBJECT IS EMPTY
-        if st.session_state.chat_sessions[st.session_state.active_chat]["subject"] is None or st.session_state.chat_sessions[st.session_state.active_chat]["subject"] == "General":
+        # AUTO DETECT IF SUBJECT IS EMPTY OR AUTO-DETECT
+        current_session_subject = st.session_state.chat_sessions[st.session_state.active_chat]["subject"]
+        if current_session_subject is None or current_session_subject == "Auto-Detect":
             detected_mapel = auto_detect_mapel(prompt_lower)
             st.session_state.chat_sessions[st.session_state.active_chat]["subject"] = detected_mapel
             curr_subj = detected_mapel
@@ -268,14 +278,36 @@ else:
             response = "That sounds fun, but it is a bit off-topic from school. Let's focus back on the lesson."
             transparency = {"label": "out_of_context", "reason": "Topic is not correlated with school subjects.", "confidence": "89.2%"}
             
-        # 5. VALID LEARNING
+        # 5. VALID LEARNING (MENEMBAK KE BACKEND API!)
         else:
-            response = f"Great question. Based on the **{st.session_state.kelas_siswa}** curriculum for **{curr_subj}**, this concept is explained as follows..."
             transparency = {"label": "valid_learning", "reason": "Safe and educational question.", "confidence": "99.1%"}
+            
+            # KODE BARU: MENYAMBUNGKAN KE API.PY
+            try:
+                # Mengirim data ke FastAPI yang berjalan di localhost:8000
+                api_url = "http://localhost:8000/generate-answer"
+                payload = {
+                    "pertanyaan": prompt,
+                    "mapel": curr_subj
+                }
+                
+                # Nunggu balasan dari otak AI (Timeout 10 detik)
+                api_response = requests.post(api_url, json=payload, timeout=10) 
+                
+                if api_response.status_code == 200:
+                    hasil = api_response.json()
+                    response = hasil["jawaban"]
+                else:
+                    response = "Oops! Error connecting to the AI brain. Server returned an error."
+                    
+            except requests.exceptions.ConnectionError:
+                response = "Backend server is not running! Please start api.py using 'uvicorn api:app --reload' in the backend folder first."
+            except Exception as e:
+                response = f"An unexpected error occurred: {e}"
 
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                time.sleep(1.0) 
+            with st.spinner("Processing with Backend Model..."):
+                time.sleep(0.5) 
                 st.write(response)
                 with st.expander("AI Guardrails Evaluation Detail"):
                     if transparency["label"] == "valid_learning":
@@ -296,21 +328,24 @@ else:
         })
         st.rerun()
 
-    # UPDATE MAPEL SIDEBAR
+    # UPDATE MAPEL SIDEBAR TO ALWAYS SHOW DROPDOWN
     with mapel_container.container():
         st.markdown("### Subjects")
-        if curr_subj is None or curr_subj == "General":
-            st.info("The subject will be automatically detected after your first question.")
+        if st.session_state.kelas_siswa == "Grade 10":
+            daftar_mapel = ["Auto-Detect", "General", "Mathematics", "Indonesian", "English", "Science", "Social Studies", "Computer Science"]
         else:
-            if st.session_state.kelas_siswa == "Grade 10":
-                daftar_mapel = ["General", "Mathematics", "Indonesian", "English", "Science", "Social Studies", "Computer Science"]
-            else:
-                daftar_mapel = ["General", "Mathematics", "Indonesian", "English", "Biology", "Chemistry", "Physics", "Sociology", "Economics", "Computer Science", "Geography", "History"]
+            daftar_mapel = ["Auto-Detect", "General", "Mathematics", "Indonesian", "English", "Biology", "Chemistry", "Physics", "Sociology", "Economics", "Computer Science", "Geography", "History"]
+        
+        # Determine current display value
+        display_subj = curr_subj if curr_subj is not None else "Auto-Detect"
+        
+        if display_subj not in daftar_mapel:
+            daftar_mapel.append(display_subj)
             
-            if curr_subj not in daftar_mapel:
-                daftar_mapel.append(curr_subj)
-                
-            new_subj = st.selectbox("Session focus subject:", daftar_mapel, index=daftar_mapel.index(curr_subj))
-            if new_subj != curr_subj:
-                st.session_state.chat_sessions[st.session_state.active_chat]["subject"] = new_subj
-                st.rerun()
+        # The selectbox is always visible from the start
+        new_subj = st.selectbox("Session focus subject:", daftar_mapel, index=daftar_mapel.index(display_subj))
+        
+        if new_subj != display_subj:
+            # If user selects something other than Auto-Detect manually
+            st.session_state.chat_sessions[st.session_state.active_chat]["subject"] = None if new_subj == "Auto-Detect" else new_subj
+            st.rerun()
