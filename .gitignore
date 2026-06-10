@@ -1,2 +1,32 @@
-# Mengabaikan file rahasia
+# ==========================================
+# 1. FILE RAHASIA & API KEYS (SANGAT KRUSIAL)
+# ==========================================
 .env
+backend/.env
+frontend/.streamlit/secrets.toml
+secrets.toml
+
+# ==========================================
+# 2. PYTHON CACHE & BYTECODE (FILE SAMPAH)
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ==========================================
+# 3. VIRTUAL ENVIRONMENTS
+# ==========================================
+venv/
+env/
+.venv/
+env.bak/
+venv.bak/
+
+# ==========================================
+# 4. KONFIGURASI EDITOR & OS (TIDAK PERLU DI-UPLOAD)
+# ==========================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

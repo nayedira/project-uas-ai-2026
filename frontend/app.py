@@ -1,7 +1,7 @@
 import streamlit as st
 import time
 import re
-import requests 
+import requests
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="EDUSIST - Exhibition", layout="wide", initial_sidebar_state="expanded")
@@ -92,33 +92,18 @@ st.markdown("""
 def auto_detect_mapel(text):
     text = text.lower()
     if any(w in text for w in ["hitung", "rumus", "angka", "matematika", "persamaan", "kuadrat", "akar", "tambah", "kurang", "kali", "bagi", "x", "y", "peluang", "trigonometri", "math", "calculate", "formula", "equation"]): return "Mathematics"
-    if any(w in text for w in ["sel", "hewan", "tumbuhan", "biologi", "fotosintesis", "dna", "bakteri", "virus", "jaringan", "organ", "cell", "animal", "plant", "biology"]): return "Biology"
-    if any(w in text for w in ["gaya", "cepat", "fisika", "gravitasi", "newton", "energi", "joule", "listrik", "magnet", "kecepatan", "physics", "force", "speed", "energy"]): return "Physics"
+    if any(w in text for w in ["sel", "hewan", "tumbuhan", "biologi", "fotosintesis", "dna", "bakteri", "virus", "jaringan", "organ", "cell", "animal", "plant", "biology", "mitosis", "bacteriofag"]): return "Science"
+    if any(w in text for w in ["gaya", "cepat", "fisika", "gravitasi", "newton", "energi", "joule", "listrik", "magnet", "kecepatan", "physics", "force", "speed", "energy", "velocity"]): return "Physics"
     if any(w in text for w in ["atom", "reaksi", "kimia", "unsur", "senyawa", "asam", "basa", "molekul", "ikatan", "larutan", "chemistry", "reaction", "element"]): return "Chemistry"
-    if any(w in text for w in ["sejarah", "tahun", "perang", "pahlawan", "kerajaan", "kemerdekaan", "masehi", "pki", "proklamasi", "history", "war", "hero"]): return "History"
-    if any(w in text for w in ["geografi", "bumi", "peta", "iklim", "gunung", "gempa", "tsunami", "cuaca", "atmosfer", "geography", "earth", "map", "climate"]): return "Geography"
-    if any(w in text for w in ["ekonomi", "uang", "pasar", "harga", "saham", "inflasi", "permintaan", "penawaran", "koperasi", "economy", "money", "market", "price"]): return "Economics"
-    if any(w in text for w in ["sosiologi", "masyarakat", "sosial", "konflik", "budaya", "interaksi", "norma", "nilai", "sociology", "society", "culture"]): return "Sociology"
-    if any(w in text for w in ["puisi", "majas", "cerpen", "indonesia", "paragraf", "kalimat", "pantun", "novel", "poem", "sentence", "indonesian"]): return "Indonesian"
-    if any(w in text for w in ["english", "grammar", "tense", "verb", "inggris", "noun", "adjective", "pronoun"]): return "English"
-    if any(w in text for w in ["coding", "python", "algoritma", "informatika", "komputer", "program", "software", "hardware", "computer science"]): return "Computer Science"
-    if any(w in text for w in ["ipa", "science"]): return "Science"
-    if any(w in text for w in ["ips", "social studies"]): return "Social Studies"
     return "General"
 
-# --- 1. SETUP SESSION STATE ---
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "user_name" not in st.session_state:
-    st.session_state.user_name = ""
-if "kelas_siswa" not in st.session_state:
-    st.session_state.kelas_siswa = "Grade 10"
-if "chat_sessions" not in st.session_state:
-    st.session_state.chat_sessions = {"Session 1": {"subject": None, "messages": []}}
-if "active_chat" not in st.session_state:
-    st.session_state.active_chat = "Session 1"
-if "show_popup" not in st.session_state:
-    st.session_state.show_popup = False
+# --- 2. SETUP SESSION STATE ---
+if "logged_in" not in st.session_state: st.session_state.logged_in = False
+if "user_name" not in st.session_state: st.session_state.user_name = ""
+if "kelas_siswa" not in st.session_state: st.session_state.kelas_siswa = "Grade 10"
+if "chat_sessions" not in st.session_state: st.session_state.chat_sessions = {"Session 1": {"subject": None, "messages": []}}
+if "active_chat" not in st.session_state: st.session_state.active_chat = "Session 1"
+if "show_popup" not in st.session_state: st.session_state.show_popup = False
 
 # --- POP-UP MODAL FUNCTION ---
 @st.dialog("Welcome to EDUSIST")
@@ -130,7 +115,7 @@ def onboarding_popup():
         st.session_state.show_popup = False 
         st.rerun()
 
-# --- 2. LOGIN PAGE ---
+# --- 3. LOGIN PAGE ---
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -157,7 +142,7 @@ if not st.session_state.logged_in:
                 st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 3. MAIN CHAT ROOM ---
+# --- 4. MAIN CHAT ROOM ---
 else:
     if st.session_state.show_popup:
         onboarding_popup()
@@ -174,10 +159,9 @@ else:
             st.rerun()
             
         st.divider()
-        
         mapel_container = st.empty()
-        
         st.divider()
+        
         st.markdown("### Learning History")
         if st.button("Create New Session", use_container_width=True):
             new_chat_id = f"Session {len(st.session_state.chat_sessions) + 1}"
@@ -187,7 +171,6 @@ else:
             
         chat_list = list(st.session_state.chat_sessions.keys())
         current_index = chat_list.index(st.session_state.active_chat)
-        
         selected_chat = st.selectbox("Select Session:", chat_list, index=current_index, label_visibility="collapsed")
         
         if selected_chat != st.session_state.active_chat:
@@ -207,18 +190,16 @@ else:
     curr_subj = active_chat_data["subject"]
     active_messages = active_chat_data["messages"]
     
-    # MAIN HEADER
     st.markdown("<h2 style='color:#384d95; font-weight:800;'>Interactive Learning Room</h2>", unsafe_allow_html=True)
     if curr_subj is None or curr_subj == "Auto-Detect":
         st.caption(f"Session: **{st.session_state.active_chat}** | Subject: *Auto-Detect Mode...*")
     else:
         st.caption(f"Session: **{st.session_state.active_chat}** | Subject: **{curr_subj}**")
 
-    # DISPLAY MESSAGES
     if not active_messages and not st.session_state.show_popup:
         with st.chat_message("assistant"):
             if curr_subj is None or curr_subj == "Auto-Detect":
-                st.write("Please type your first question below. I will detect the subject automatically, or you can select it manually in the sidebar.")
+                st.write("Please type your first question below. I will detect the subject automatically.")
             else:
                 st.write(f"Class is ready! What would you like to learn about {curr_subj}?")
 
@@ -230,18 +211,15 @@ else:
                     label = msg["transparency"]["label"]
                     if label == "valid_learning":
                         st.success(f"Label: {label}")
-                    elif label == "cheating_attempt":
-                        st.error(f"Label: {label}")
-                    elif label == "inappropriate":
+                    elif label in ["cheating_attempt", "inappropriate"]:
                         st.error(f"Label: {label}")
                     elif label == "out_of_context":
                         st.warning(f"Label: {label}")
                     st.write(f"**Reason:** {msg['transparency']['reason']}")
                     st.write(f"**Confidence Score:** {msg['transparency']['confidence']}")
 
-    chat_placeholder = "Type your first question here..." if curr_subj is None or curr_subj == "Auto-Detect" else f"Ask about {curr_subj} here..."
+    chat_placeholder = "Type your question here..." if curr_subj is None or curr_subj == "Auto-Detect" else f"Ask about {curr_subj} here..."
 
-    # USER INPUT & GUARDRAILS LOGIC
     if prompt := st.chat_input(chat_placeholder):
         with st.chat_message("user"):
             st.write(prompt)
@@ -249,7 +227,6 @@ else:
         st.session_state.chat_sessions[st.session_state.active_chat]["messages"].append({"role": "user", "content": prompt})
         prompt_lower = prompt.lower()
         
-        # AUTO DETECT IF SUBJECT IS EMPTY OR AUTO-DETECT
         current_session_subject = st.session_state.chat_sessions[st.session_state.active_chat]["subject"]
         if current_session_subject is None or current_session_subject == "Auto-Detect":
             detected_mapel = auto_detect_mapel(prompt_lower)
@@ -257,63 +234,64 @@ else:
             curr_subj = detected_mapel
             st.toast(f"Subject detected: {detected_mapel}")
         
-        # 1. GIBBERISH DETECTION
+        # --- GUARDRAILS START ---
         if len(prompt_lower.strip()) < 3 or re.search(r'[^aiueo\s0-9]{5,}', prompt_lower):
             response = "Hmm, your typing seems unclear or contains typos. Let's try asking your question with a proper sentence."
             transparency = {"label": "out_of_context", "reason": "Detected meaningless text (gibberish) or invalid input.", "confidence": "98.1%"}
             
-        # 2. CHEATING DETECTION
         elif any(w in prompt_lower for w in ["jawaban", "contekan", "answer", "cheat", "key", "kunci"]):
             response = f"Sorry {st.session_state.user_name}, EDUSIST is designed to guide your learning, not to give instant answers. Let's learn the step-by-step process together."
             transparency = {"label": "cheating_attempt", "reason": "Detected a pattern requesting direct answers.", "confidence": "96.5%"}
             
-        # 3. TOXIC DETECTION
         elif any(w in prompt_lower for w in ["bego", "bodoh", "kasar", "goblok", "tolol", "anjing", "anjay", "stupid", "idiot", "fuck", "shit", "bitch", "asshole"]):
             response = f"Hello {st.session_state.user_name}. Let's keep this classroom positive. Please use polite language so we can learn comfortably."
             transparency = {"label": "inappropriate", "reason": "Detected inappropriate language.", "confidence": "92.8%"}
             
-        # 4. OOT DETECTION
         elif any(w in prompt_lower for w in ["game", "film", "makan", "movie", "food", "play"]):
             response = "That sounds fun, but it is a bit off-topic from school. Let's focus back on the lesson."
             transparency = {"label": "out_of_context", "reason": "Topic is not correlated with school subjects.", "confidence": "89.2%"}
             
-        # 5. VALID LEARNING (MENEMBAK KE BACKEND API!)
+        # --- LULUS GUARDRAILS -> TEMBAK KE BACKEND API.PY ---
         else:
-            transparency = {"label": "valid_learning", "reason": "Safe and educational question.", "confidence": "99.1%"}
+            transparency = {"label": "valid_learning", "reason": "Safe and educational question.", "confidence": "Waiting for API..."}
             
-            # KODE BARU: MENYAMBUNGKAN KE API.PY
             try:
-                # Mengirim data ke FastAPI yang berjalan di localhost:8000
+                # =====================================================================
+                # ⚠️ PENTING: Ganti URL ini nanti kalau backend kamu sudah di-deploy!
+                # Contoh jika pakai Render: api_url = "https://edusist-api.onrender.com/generate-answer"
+                # =====================================================================
                 api_url = "http://localhost:8000/generate-answer"
+                
                 payload = {
-                    "pertanyaan": prompt,
+                    "pertanyaan": prompt_lower,
                     "mapel": curr_subj
                 }
-                
-                # Nunggu balasan dari otak AI (Timeout 10 detik)
                 api_response = requests.post(api_url, json=payload, timeout=60) 
                 
                 if api_response.status_code == 200:
                     hasil = api_response.json()
-                    response = hasil["jawaban"]
+                    # Menarik jawaban cerdas dari Backend-mu
+                    response = hasil.get("jawaban", "Model tidak mengembalikan jawaban.")
+                    transparency["confidence"] = hasil.get("confidence", "API Active")
                 else:
-                    response = "Oops! Error connecting to the AI brain. Server returned an error."
+                    response = f"Oops! Error dari API Backend (Status Code: {api_response.status_code})."
+                    transparency["confidence"] = "API Error"
                     
             except requests.exceptions.ConnectionError:
-                response = "Backend server is not running! Please start api.py using 'uvicorn api:app --reload' in the backend folder first."
+                response = "⚠️ Gagal terhubung ke API! Pastikan kamu sudah menyalakan terminal `uvicorn api:app --reload`."
+                transparency["confidence"] = "Connection Refused"
             except Exception as e:
-                response = f"An unexpected error occurred: {e}"
+                response = f"Terjadi error saat memanggil API: {e}"
+                transparency["confidence"] = "Error"
 
         with st.chat_message("assistant"):
-            with st.spinner("Processing with Backend Model..."):
+            with st.spinner("Mikirin jawaban dari API Backend..."):
                 time.sleep(0.5) 
                 st.write(response)
                 with st.expander("AI Guardrails Evaluation Detail"):
                     if transparency["label"] == "valid_learning":
                         st.success(f"Label: {transparency['label']}")
-                    elif transparency["label"] == "cheating_attempt":
-                        st.error(f"Label: {transparency['label']}")
-                    elif transparency["label"] == "inappropriate":
+                    elif transparency["label"] in ["cheating_attempt", "inappropriate"]:
                         st.error(f"Label: {transparency['label']}")
                     elif transparency["label"] == "out_of_context":
                         st.warning(f"Label: {transparency['label']}")
@@ -335,16 +313,12 @@ else:
         else:
             daftar_mapel = ["Auto-Detect", "General", "Mathematics", "Indonesian", "English", "Biology", "Chemistry", "Physics", "Sociology", "Economics", "Computer Science", "Geography", "History"]
         
-        # Determine current display value
         display_subj = curr_subj if curr_subj is not None else "Auto-Detect"
-        
-        if display_subj not in daftar_mapel:
+        if display_subj not in daftar_mapel: 
             daftar_mapel.append(display_subj)
             
-        # The selectbox is always visible from the start
         new_subj = st.selectbox("Session focus subject:", daftar_mapel, index=daftar_mapel.index(display_subj))
         
         if new_subj != display_subj:
-            # If user selects something other than Auto-Detect manually
             st.session_state.chat_sessions[st.session_state.active_chat]["subject"] = None if new_subj == "Auto-Detect" else new_subj
             st.rerun()

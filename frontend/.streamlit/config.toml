@@ -1,0 +1,19 @@
+[theme]
+# Warna utama untuk elemen interaktif (tombol primer, loading spinner, widget)
+primaryColor = "#e63e88"
+
+# Warna background utama halaman (putih bersih)
+backgroundColor = "#ffffff"
+
+# Warna background sekunder (untuk area sidebar, kotak input, dan latar chat)
+secondaryBackgroundColor = "#f8f9fa"
+
+# Warna teks utama (abu-abu gelap kehitaman agar nyaman dibaca)
+textColor = "#1e1e1e"
+
+# Jenis huruf bawaan (cocok dengan CSS SF Pro/BlinkMacSystemFont yang kamu pakai)
+font = "sans serif"
+
+[server]
+# Menonaktifkan peringatan menu bawaan Streamlit agar UI lebih bersih saat pameran
+runOnSave = false
