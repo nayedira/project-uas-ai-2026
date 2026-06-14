@@ -30,7 +30,7 @@ if not GEMINI_API_KEY:
     raise ValueError("API Key tidak ditemukan! Pastikan file .env sudah diisi.")
 
 genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 
 # --- 2. LOAD MODEL LOKAL (PYTORCH) ---
 # Memastikan path mengarah ke folder Model yang benar di dalam backend

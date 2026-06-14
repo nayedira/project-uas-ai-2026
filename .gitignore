@@ -13,6 +13,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyc
 
 # ==========================================
 # 3. VIRTUAL ENVIRONMENTS
