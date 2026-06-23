@@ -33,17 +33,25 @@ genai.configure(api_key=GEMINI_API_KEY)
 gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 
 # --- 2. LOAD MODEL LOKAL (PYTORCH) ---
-# Memastikan path mengarah ke folder Model yang benar di dalam backend
-MODEL_PATH = "Model/edusist_model_new"
 
-try:
-    print("Memuat Model Lokal EDUSIST...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-    local_model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
-    print("Model Lokal Berhasil Dimuat!")
-except Exception as e:
-    print(f"Gagal memuat model lokal: {e}")
-    tokenizer, local_model = None, None
+USE_LOCAL_MODEL = os.getenv("USE_LOCAL_MODEL", "true").lower() == "true"
+
+tokenizer = None
+local_model = None
+
+if USE_LOCAL_MODEL:
+    MODEL_PATH = "Model/edusist_model_new"
+
+    try:
+        print("Memuat Model Lokal EDUSIST...")
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+        local_model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
+        print("Model Lokal Berhasil Dimuat!")
+    except Exception as e:
+        print(f"Gagal memuat model lokal: {e}")
+        tokenizer, local_model = None, None
+else:
+    print("Deployment Mode: Model lokal dinonaktifkan")
 
 # --- 3. FORMAT DATA DARI FRONTEND ---
 class ChatRequest(BaseModel):
