@@ -2,15 +2,14 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy backend requirements
+# Copy requirements dari backend
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code
+# Copy semua file backend
 COPY backend/ ./backend/
-COPY .env .
 
-# Set environment
+# Set environment variables (tanpa .env file)
 ENV PYTHONUNBUFFERED=1
 ENV MODEL_PATH=backend/Model/edusist_model_new
 ENV USE_LOCAL_MODEL=true
