@@ -40,7 +40,7 @@ tokenizer = None
 local_model = None
 
 if USE_LOCAL_MODEL:
-    MODEL_PATH = "Model/edusist_model_new"
+    MODEL_PATH =  os.getenv("MODEL_PATH", "backend/Model/edusist_model_new")
 
     try:
         print("Memuat Model Lokal EDUSIST...")

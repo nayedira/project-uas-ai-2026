@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import time
 import re
@@ -260,7 +261,7 @@ else:
                 # ⚠️ PENTING: Ganti URL ini nanti kalau backend kamu sudah di-deploy!
                 # Contoh jika pakai Render: api_url = "https://edusist-api.onrender.com/generate-answer"
                 # =====================================================================
-                api_url = "http://localhost:8000/generate-answer"
+                api_url = os.getenv("API_URL", "http://localhost:8000/generate-answer")
                 
                 payload = {
                     "pertanyaan": prompt_lower,
