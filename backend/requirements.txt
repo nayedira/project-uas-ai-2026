@@ -4,3 +4,6 @@ google-generativeai
 python-dotenv
 torch
 transformers
+accelerate
+sentencepiece
+protobuf

@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import time
 import re
@@ -267,6 +268,7 @@ else:
                     "mapel": curr_subj
                 }
                 api_response = requests.post(api_url, json=payload, timeout=60) 
+                
                 
                 if api_response.status_code == 200:
                     hasil = api_response.json()
