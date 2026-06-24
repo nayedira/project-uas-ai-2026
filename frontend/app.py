@@ -252,15 +252,11 @@ else:
             response = "That sounds fun, but it is a bit off-topic from school. Let's focus back on the lesson."
             transparency = {"label": "out_of_context", "reason": "Topic is not correlated with school subjects.", "confidence": "89.2%"}
             
-        # --- LULUS GUARDRAILS -> TEMBAK KE BACKEND API.PY ---
+        # --- LULUS GUARDRAILS -> BACKEND API.PY ---
         else:
             transparency = {"label": "valid_learning", "reason": "Safe and educational question.", "confidence": "Waiting for API..."}
             
             try:
-                # =====================================================================
-                # ⚠️ PENTING: Ganti URL ini nanti kalau backend kamu sudah di-deploy!
-                # Contoh jika pakai Render: api_url = "https://edusist-api.onrender.com/generate-answer"
-                # =====================================================================
                 api_url = "https://project-uas-ai-2026-production.up.railway.app/generate-answer"
                 
                 payload = {
@@ -272,7 +268,7 @@ else:
                 
                 if api_response.status_code == 200:
                     hasil = api_response.json()
-                    # Menarik jawaban cerdas dari Backend-mu
+                    # Menarik jawaban dari Backend
                     response = hasil.get("jawaban", "Model tidak mengembalikan jawaban.")
                     transparency["confidence"] = hasil.get("confidence", "API Active")
                 else:
