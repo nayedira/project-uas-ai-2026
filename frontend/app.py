@@ -269,9 +269,7 @@ else:
                 }
                 api_response = requests.post(api_url, json=payload, timeout=60) 
                 
-                st.write(api_response.status_code)
-                st.write(api_response.text)
-
+                
                 if api_response.status_code == 200:
                     hasil = api_response.json()
                     # Menarik jawaban cerdas dari Backend-mu
